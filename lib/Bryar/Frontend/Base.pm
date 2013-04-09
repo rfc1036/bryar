@@ -148,14 +148,18 @@ Output the entire blog data to the browser
 =cut
 
 sub output {
-    my ($self, $ct, $data) = @_;
-    $self->send_header("Content-type", $ct);
-    # $self->send_header('Cache-Control', 'max-age=180');
-    if ($self->_etag($data)) {
+    my ($self, $ct, $data, $headers) = @_;
+    $headers ||= { };
+
+    $self->send_header('Content-Type', $ct) if not $headers->{'Content-Type'};
+
+    if (not $headers->{Status} and $self->_etag($data)) {
+        $self->send_header($_, $headers->{$_}) foreach keys %$headers;
         $self->send_header('Status', '304 Not Modified');
         $self->send_header('Content-Length', 0);
         $self->send_data('');
     } else {
+        $self->send_header($_, $headers->{$_}) foreach keys %$headers;
         $self->send_header('Content-Length', length($data));
         $self->send_data($data);
     }
