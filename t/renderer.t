@@ -11,4 +11,4 @@ use Bryar;
 my $bryar = Bryar->new(datadir=> cwd()."/t/");
 my @documents = $bryar->{config}->source->all_documents($bryar->config);
 my $page = $bryar->{config}->renderer->generate("html", $bryar, @documents);
-like($page, qr/Boring.*first blog.*second blog/sm, "Page processed OK");
+like($page, qr/Boring.*second blog.*first blog/sm, "Page processed OK");
