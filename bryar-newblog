@@ -145,6 +145,9 @@ write_file("template.html", <<'EOC');
 [% PROCESS blogmacros.tt2 %]
 [% INCLUDE head.html %]
 
+[% IF bryar.http_headers.Status.match('^404') %]
+<h2>Error 404: the requested page does not exist!</h2>
+[% END %]
 [% FOREACH entry = documents;
     entry_time = entry.timepiece;
     IF entry == documents.first or entry_time.ymd != previous.timepiece.ymd %]

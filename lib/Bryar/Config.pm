@@ -156,6 +156,24 @@ sub source {
 }
 
 
+=head2 cache
+
+	$self->cache();    # Get cache object
+	$self->cache(new Cache::FileCache()); # Set cache object
+
+An instance of a C<Cache::Cache> subclass which will be used to cache
+the formatted pages.
+
+=cut
+
+sub cache {
+    my $self = shift;
+    if (@_) { $self->{cache} = shift };
+
+    return $self->{cache};
+}
+
+
 =head2 datadir
 
 	$self->datadir();    # Get datadir

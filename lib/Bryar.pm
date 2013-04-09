@@ -204,20 +204,53 @@ sub go {
 
 sub _doit {
     my $self = shift;
-    my %args = $self->config->frontend()->parse_args($self->config, @_);
-	$self->{arguments} = \%args;
+    my %args = $self->config->frontend->parse_args($self->config, @_);
+    $self->{arguments} = \%args;
 
-    my @documents = $self->config->collector()->collect($self->config, %args);
+    # The HTTP headers must be reset to allow re-using the Bryar object
+    # (e.g. when using FastCGI).
+    $self->{http_headers} = { };
 
-    $args{format} ||= "html";
+    my $cache = $self->config->cache;
+    my ($cache_key, @output);
 
-    $self->config->frontend()->output(
-		$self->config->renderer->generate(
-					$self->{arguments}{format},
-					$self,
-					@documents
-				)
-    );
+    # try to fetch a complete formatted answer from the cache, if one exists
+    if ($cache) {
+        $cache_key = $self->cache_key;
+        my $object = $cache->get($cache_key);
+        @output = @$object if $object;
+    }
+
+    # if there is no cached answer we need to collect the data and generate one
+    if (not @output) {
+        my @documents = $self->config->collector->collect($self->config, %args);
+
+        $self->{http_headers}->{Status} = '404 Not Found' if not @documents;
+
+        $args{format} ||= 'html';
+
+        @output = (
+            $self->config->renderer->generate(
+                $self->{arguments}{format},
+                $self,
+                @documents
+            ),
+            $self->{http_headers}
+        );
+
+        $cache->set($cache_key, \@output) if $cache;
+    }
+
+    $self->config->frontend->output(@output);
+}
+
+# create the key used to index the cache
+sub cache_key {
+    my $self = shift;
+
+    return 'Bryar: ' . join(' | ', map {
+        $_ . ' => ' . $self->{arguments}->{$_}
+    } sort keys %{$self->{arguments}});
 }
 
 =head2 posts_calendar
