@@ -37,6 +37,19 @@ EOC
 
 write_file("blogmacros.tt2", <<'EOC');
 
+# Accepts a DateTime object and returns a date string suitable for ATOM feeds
+# (i.e. in the format specified by ISO 8601).
+MACRO datetimetz(time) BLOCK;
+  SET tz = time.strftime('%z');
+  SET tz = tz.replace('(\d{2})$', ':$1');
+  SET tz = 'Z' IF tz == '+00:00';
+  time.datetime _ tz;
+END;
+
+# Accepts a DateTime object and returns a date string suitable for email Date
+# headers (i.e. in the format specified by RFC 822).
+MACRO datetime822(time) GET time.strftime('%a, %d %b %Y %H:%M:%S %z');
+
 [% MACRO day(entry_time) BLOCK;
     entry_time.day _ ", " _ entry_time.mday _ " " _
     entry_time.month _ " " _ entry_time.year;
@@ -222,12 +235,18 @@ write_file("template.rss", <<EOC);
   xmlns:content="http://purl.org/rss/1.0/modules/content/"
   xmlns="http://purl.org/rss/1.0/">
 
-  <channel rdf:about="[%bryar.config.baseurl%]">
+  <channel rdf:about="[% bryar.config.baseurl %]/?format=xml">
     <title>[% bryar.config.name %]</title>
-    <link>[% bryar.config.baseurl %]</link>
+    <link>[% bryar.config.baseurl %]/</link>
     <description>[% bryar.config.description %]</description>
+    <dc:creator>[% bryar.config.author || item.author %]</dc:creator>
     <dc:language>en-us</dc:language>
-    <dc:date>[%documents.first.timepiece.datetime%]</dc:date>
+    <dc:date>[% datetimetz(documents.first.datetime) %]</dc:date>
+[% IF 0 %]
+    <sy:updatePeriod>daily</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <sy:updateBase>2000-01-01T12:00+00:00</sy:updateBase>
+[% END %]
     <items>
       <rdf:Seq>
       [% FOREACH item=documents %]
@@ -241,11 +260,9 @@ write_file("template.rss", <<EOC);
   <item rdf:about="[%bryar.config.baseurl _ "/id_" _ item.id %]">
     <title> [% item.title %] </title>
     <link> [%bryar.config.baseurl%]/id_[%item.id%]</link>
-    <description>
-[% item.content | html %]
-</description>
-    <dc:date> [%item.timepiece.datetime %] </dc:date>
-    <dc:creator> [%item.author %] </dc:creator>
+    <description>[% item.content | html %]</description>
+    <dc:date>[% datetimetz(item.datetime) %]</dc:date>
+    <dc:creator>[% bryar.config.author || item.author %]</dc:creator>
   </item>
 [% END %]
 </rdf:RDF>
@@ -274,14 +291,23 @@ EOC
 
 write_file("template.atom", <<EOC);
 <?xml version="1.0" encoding="utf-8"?>
-<feed version="0.3" xmlns="http://purl.org/atom/ns#">
+<feed xmlns="http://www.w3.org/2005/Atom">
   <title>[% bryar.config.name %]</title>
+  <subtitle>[% bryar.config.description %]</subtitle>
   <link rel="alternate" type="text/html"
-   href="[% bryar.config.baseurl %]"/>
-  <modified>[%documents.first.timepiece.datetime%][% FILTER format("%03d") %][% documents.first.timepiece.tzoffset / 3600 %][%END%]:00</modified>
+   href="[% bryar.config.baseurl %]/"/>
+  <link rel="alternate" type="application/rdf+xml" title="RSS"
+   href="[% bryar.config.baseurl %]/?format=xml"/>
+  <link rel="alternate" type="application/atom+xml" title="ATOM"
+   href="[% bryar.config.baseurl %]/?format=atom"/>
+  <updated>[% datetimetz(documents.first.datetime) %]</updated>
   <author>
     <name>[% bryar.config.author %]</name>
+    <uri>[% bryar.config.baseurl %]/</uri>
   </author>
+
+  <generator uri="http://search.cpan.org/dist/Bryar/" version="3.0">Bryar</generator>
+
 [% FOREACH item = documents %]
   <entry>
     <title>[% item.title %]</title>
@@ -289,15 +315,13 @@ write_file("template.atom", <<EOC);
      href="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
     [% idURL = bryar.config.baseurl | replace('http://', '') | replace('/.*', '') %]
     <id>tag:[% idURL _ "," _ item.timepiece.year _":id_" _ item.id %]</id>
-    [% hours = item.timepiece.tzoffset / 3600 %]
-    [% minutes = (item.timepiece.tzoffset % (hours * 60 * 60)) / 60 %]
-    <issued>[% item.timepiece.datetime %][% FILTER format("%03d") %][% hours  %][%END%]:[% FILTER format("%02d") %][% minutes %][%END%]</issued>
-    <modified>[% item.timepiece.datetime %][% FILTER format("%03d") %][% hours  %][%END%]:[% FILTER format("%02d") %][% minutes %][%END%]</modified>
+    <published>[% datetimetz(item.datetime) %]</published>
+    <updated>[% datetimetz(item.datetime) %]</updated>
     <summary type="text/plain"> [% FILTER truncate(252) %]
             [%  item.excerpt(bryar.config.excerpt_words) %]
         [% END %]
     </summary>
-    <content type="text/html" mode="escaped" xml:lang="en" xml:base="[% bryar.config.baseurl %]">
+    <content type="text/html" xml:lang="en" xml:base="[% bryar.config.baseurl %]/">
       <![CDATA[ [% item.content %] ]]>
     </content>
   </entry>
