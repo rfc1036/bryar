@@ -69,19 +69,22 @@ sub _tt_process {
         bryar     => $bryar,
     }, \$output);
     if (!$output) {
-        $bryar->{config}->frontend->report_error("Template Error",
+        my $error = join("\n", $tt->error);
+        $error =~ s/&/&amp;/g;
+        $error =~ s/</&lt;/g;
+        $error =~ s/>/&gt;/g;
+        $bryar->{config}->frontend->report_error_html("Template Error",
 <<EOF
+<p>
 An error occurred while processing the templates for the blog. The
 error as reported by Template Toolkit was:
-
+</p>
 <PRE>
-@{[ $tt->error ]}
+$error
 </PRE>
 EOF
         );
     }
-    # $output =~ s/\s+/ /g;
-    # $output =~ s/>\s+</></g;
     return $output;
 }
 
