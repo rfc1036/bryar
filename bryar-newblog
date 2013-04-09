@@ -305,11 +305,18 @@ EOC
 write_file("calendar", <<EOC);
 <table class="calendar">
 <thead>
-<tr class="days"><td>Sun</td><td>Mon</td><td>Tue</td><td>Wed</td><td>Thu</td><td
->Fri</td><td>Sat</td></tr>
+<tr class="days">
+<th abbr='Sunday' scope='col' title='Sunday'>S</th>
+<th abbr='Monday' scope='col' title='Monday'>M</th>
+<th abbr='Tuesday' scope='col' title='Tuesday'>T</th>
+<th abbr='Wednesday' scope='col' title='Wednesday'>W</th>
+<th abbr='Thursday' scope='col' title='Thursday'>T</th>
+<th abbr='Friday' scope='col' title='Friday'>F</th>
+<th abbr='Saturday' scope='col' title='Saturday'>S</th>
+</tr>
 </thead>
 <tbody>
-[% FOREACH week = bryar.posts_calendar %]
+[% FOREACH week = bryar.posts_calendar.calendar %]
   <tr>
   [% FOREACH day = week %]
     <td[% IF day.sunday %] class="sunday"[% END %]>
