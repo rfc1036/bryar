@@ -85,13 +85,17 @@ sub parse_path {
     #...
 
     my %args;
-    if (defined $pi[-1] and $pi[-1] eq "xml")     { $args{format} = "xml"; pop @pi; }
-    if (defined $pi[-1] and $pi[-1] =~ /id_(.*)/) { $args{id} = $1; pop @pi; }
-    if (defined $pi[0] and $pi[0] =~ /^([a-zA-Z]\w*)/) { # We have a subblog
+    if ($pi[-1] and $pi[-1] eq "xml") { $args{format} = "xml"; pop @pi; }
+    if ($pi[-1] and $pi[-1] =~ /^id_([0-9]+)/) { $args{id} = $1; pop @pi; }
+    if ($pi[0] and $pi[0] =~ /^([a-zA-Z]\w*)/
+               and $pi[0] !~ /^(?:before)_[0-9]+$/) { # We have a subblog
         $args{subblog} = $1;
         shift @pi;
     }
-    if (@pi) { # Time/date handling
+    if (@pi == 1 and $pi[0] =~ /^before_([0-9]+)$/) {
+        $args{before} = $1;
+        $args{limit} = $config->{recent};
+    } elsif (@pi) { # Time/date handling
         my ($from, $til) = _make_from_til(@pi);
         if ($from and $til) {
             $args{before} = $til;

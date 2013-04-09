@@ -177,6 +177,10 @@ write_file("template.html", <<'EOC');
 
     </div>
 [% END %]
+[% IF NOT bryar.arguments.id AND NOT bryar.arguments.since AND
+      documents.last.id != 1 %]
+<p><a href="[% 'before_' _ documents.last.epoch %]">Older posts</a></p>
+[% END %]
 
 [% INCLUDE foot.html %]
 EOC
