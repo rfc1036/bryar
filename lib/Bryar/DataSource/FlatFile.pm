@@ -196,40 +196,45 @@ sub add_comment {
 
     my @links = ("$params{url} $params{content}" =~ m!(http://)!g);
     if(@links > 3) { # more than three links is definitely spam
-        die("Attempt to spam the journal\n");
-        # $config->frontend()->report_error("That looked like spam.  Go away.\n");
+        $config->frontend->report_error('Comment failure', 'Attempt to spam the journal.');
     } elsif(length($params{content}) < 1) { # real content always has, errm, content
-        die("Attempt to post with no content\n");
+        $config->frontend->report_error('Comment failure', 'Attempt to post with no content.');
     } elsif(@links) {
         my($email, $author) = map { # kill funny chars to avoid remote
             my $foo = $_;           # execution in open(). Yuck.
             $foo =~ s/[^\w @]/_/g;
             $foo;
         } @params{qw(email author)};
-        open(MAIL, "| mail -s \"$email $author maybe tried to spam the journal\" ".$config->email()) || die("Can't send mail\n$!\n");
+        open(MAIL, "| mail -s \"$email $author maybe tried to spam the journal\" ".$config->email())
+            or $config->frontend->report_error('Comment failure', "Cannot send mail: $!");
         print MAIL "$_: $params{$_}\n" for keys %params;
         print MAIL "\nEnvironment\n";
         print MAIL "$_: $ENV{$_}\n" for keys %ENV;
-        close(MAIL) || die("Can't send mail:\n$!\n");
-        $config->frontend()->report_error("Your comment is being held for approval\n");
+        close MAIL
+            or $config->frontend->report_error('Comment failure', "Cannot send mail: $!");
+        # FIXME: this is not an error
+        $config->frontend->report_error("Your comment is being held for approval.");
     } else {
         my $file = $params{document}->id.".comments";
         $params{url} = "http://".$params{url}
             if($params{url} && $params{url} !~ /^http:\/\//);
         # This probably fails with subblogs, but I don't use them.
         chdir $config->datadir."/";
-        open(OUT, ">>:utf8", $file) or die $!;
+        open(OUT, ">>:utf8", $file)
+            or $config->frontend->report_error("Cannot open $file", $!);
         delete $params{document};
         print OUT "$_: $params{$_}\n" for keys %params;
         print OUT "-----\n";
         # Looks a bit like blosxom, doesn't it?
         close OUT;
         # now send mail
-        open(MAIL, '| mail -s "Someone commented in the journal" '.$config->email()) || die("Can't send mail\n$!\n");
+        open(MAIL, '| mail -s "Someone commented in the journal" '.$config->email())
+            or $config->frontend->report_error('Comment failure', "Cannot send mail: $!");
         print MAIL "$_: $params{$_}\n" for keys %params;
         print MAIL "\nEnvironment\n";
         print MAIL "$_: $ENV{$_}\n" for keys %ENV;
-        close(MAIL) || die("Can't send mail:\n$!\n");
+        close MAIL
+            or $config->frontend->report_error('Comment failure', "Cannot send mail: $!");
     }
 }
 
