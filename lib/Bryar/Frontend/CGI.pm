@@ -6,6 +6,7 @@ use warnings;
 use Carp;
 our $VERSION = '1.1';
 use CGI ();
+use Encode;
 my $cgi = new CGI;
 
 =head1 NAME
@@ -23,7 +24,7 @@ sub obtain_url { $cgi->url() }
 sub obtain_path_info { $cgi->path_info() }
 sub obtain_params { map { $_ => $cgi->param($_) } $cgi->param }
 sub get_header { my $self = shift; $cgi->http(shift) }
-sub send_data { my $self = shift; binmode(STDOUT, ':utf8'); print "\n",@_ }
+sub send_data { my $self = shift; print "\n", map { encode('UTF-8', $_) } @_ }
 sub send_header { my ($self, $k, $v) = @_; print "$k: $v\n"; }
 
 1;
