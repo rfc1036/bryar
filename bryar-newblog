@@ -1,0 +1,329 @@
+#!/usr/bin/perl
+use Cwd;
+use Config;
+
+print "Setting up a Bryar blog in this directory\n\n";
+
+sub write_file {
+    my ($name, $content) = @_;
+    open OUT, ">".$name or die "Couldn't write to $name - $!\n";
+    print OUT $content;
+    close OUT;
+}
+
+# These are defaults which are written out to be customized, so I don't
+# feel bad about including them here inline.
+
+# Blatant assumption of standard Unix
+write_file("bryar.cgi", "#!/usr/bin/perl\nuse Bryar; Bryar->go()\n");
+chmod 0755, "bryar.cgi";
+
+write_file("bryar.conf",<<EOC);
+name : My Bryar Weblog!
+description : A blog without a more useful description
+baseurl : http://where.will.i.be/
+datadir : @{[ cwd() ]}
+author : your name here
+email : me\@example.com
+EOC
+
+write_file("bryar_first_post.txt", <<EOC);
+My first Bryar blog post!
+
+<p>First post! First post!</p>
+<p>Wow, this Bryar thing is neat, huh?  This space should fill up with helpful 
+hints on what else you can do with Bryar.</p>
+EOC
+
+write_file("template.html", <<'EOC');
+
+[% MACRO day(entry_time) BLOCK;
+    entry_time.day _ ", " _ entry_time.mday _ " " _
+    entry_time.month _ " " _ entry_time.year;
+END;
+
+MACRO category(entry) BLOCK;
+ "Category : " _ entry.category;
+END;
+
+MACRO author(entry) BLOCK;
+ "Author : " _ entry.author;
+END;
+
+MACRO comment_form(entry) BLOCK;
+  'Post a new comment!
+  <DIV class="comment">
+  <FORM METHOD="POST">
+  Your name: <INPUT NAME="author"><BR>
+  Your address/home page: <INPUT NAME="url"><BR>
+  <HR WIDTH="98%">
+  Your rant:<BR>
+  <textarea NAME="content" COLS=80 ROWS=7></textarea>
+  <BR>
+  <INPUT TYPE="submit" VALUE="Vent">
+  <INPUT TYPE="hidden" NAME="id" VALUE="'; entry.id;
+  '"><INPUT TYPE="hidden" NAME="newcomment" VALUE="1">
+  
+  </FORM>
+  </DIV>
+  ';
+
+END;
+
+MACRO permalink(entry, params) BLOCK;
+ bryar.config.baseurl;
+ '/id_';
+ entry.id;
+ "?" _ params IF params;
+END;
+
+MACRO comments(entry) BLOCK;
+ '<a href="';
+  permalink(entry, "comments=1");
+ '" title="Leave or view comments on \'entry.title\'">';
+ entry.comments.size || 0;
+ " Comments</a>";
+ IF bryar.arguments.comments;
+     "</P>";
+
+     FOREACH comment = entry.comments; 
+     '<DIV CLASS="comment">';
+     comment.content;
+     '<BR><HR COLOR="#AAAAAA" WIDTH=98%>';
+     '<I>Posted by <A HREF="'; comment.url; '">'; comment.author;
+     '</A> at ';
+     day(comment.timepiece);
+     ' '; 
+     comment.timepiece.time;
+     '</I></DIV>';
+     '<BR>';
+     END;
+     comment_form(entry);
+     "<P>";
+ END;
+END; 
+
+%]
+
+[%
+
+MACRO google_link(query, label) BLOCK;
+ '<a href="http://www.google.com/search?q=';
+ query | html | uri;
+ '" title="Search Google for more stuff link this...">'; 
+ label; 
+ "</a>";
+END;
+
+MACRO keywords(entry) BLOCK;
+    "Keywords :";
+    FOREACH key = entry.keywords.slice(0,2);
+       '[ ';
+       google_link(key, key);
+       '] ';
+    END;
+END;
+%]
+
+[% INCLUDE head.html %]
+
+[% FOREACH entry = documents;
+    entry_time = entry.timepiece;
+    IF entry == documents.first or entry_time.ymd != previous.timepiece.ymd %]
+    <div class="bryarDate"> [% day(entry_time) %] </div>
+    [% END %]
+    [% previous = entry %]
+
+    <div class="bryarEntry">
+        <a name="[%entry.id%]"></a>
+            <h2 class="bryarTitle">[%entry.title%]</h2>
+
+            [% entry.content %]
+
+            <br />
+
+    <div class="bryarEntrySource">Posted at 
+        <span class="bryarEntryTime">[%entry_time.time%]</span> 
+        by <span class="bryarEntryAuthor">[% bryar.config.author %]</span>
+    </div> 
+    
+    <ul class="bryarEntryLinks">     
+        <li><a href="[% permalink(entry, "") %]" title="Permanent link to '[% entry.title %]'">#</a></li>
+        <li><a href="http://www.technorati.com/cosmos/search.html?rank=&url=[% permalink(entry, "") %]"><img src="/notebook/images/technorati_bubble.gif" width="19px" height="18px" border="0" align="middle" title="Search Technorati Cosmos..." /></a></li>
+        <li>[% google_link(entry.title, "G") %]</li>
+        <li>[% comments(entry) %]</li>
+     </ul>
+
+    </div>
+[% END %]
+
+[% INCLUDE foot.html %]
+EOC
+
+write_file("head.html", <<EOC);
+<html>
+
+<head>
+    <title>[% bryar.config.name %]</title>
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="[% bryar.config.url %]?format=rss" />
+    <link rel="alternate" type="application/atom+xml" title="ATOM" href="[% bryar.config.url %]?format=atom" />
+</head>
+
+<body>
+<div id="bryarHeader">
+    <h1>[% bryar.config.name %]</h1>
+</div>
+
+EOC
+
+write_file("foot.html", <<EOC);
+<hr /> 
+
+<em>Powered by Bryar!</em> 
+
+<form>Search &quot;[% bryar.config.name %]&quot;: <br />
+   <input name="search" type="text" class="bryarSingleLineBox">
+   <input name="submit" type="submit" value="Search" class="bryarButton" />
+</form>
+<hr />
+Subscribe to full text feeds via:
+<a href="?format=atom" content-type="application/atom+xml">ATOM</a>
+ | 
+<a href="?format=rss2" content-type="application/rdf+xml">RSS2</a>
+ |
+<a href="?format=rss" content-type="application/rdf+xml">RSS</a>
+<br />
+Subscribe to preview feeds via: 
+<a href="?format=atom_excerpt" content-type="application/atom+xml">ATOM</a>
+ |
+<a href="?format=rss2_excerpt" content-type="application/rdf+xml">RSS2</a>
+ |
+<a href="?format=rss_excerpt" content-type="application/rdf+xml">RSS</a>
+<br />
+
+<a href="http://www.feedvalidator.org/check.cgi?url=http://bryar.multiply.org/notebook/bryar.cgi?format=atom"><img src="/notebook/images/valid-atom.png" alt="[Valid Atom]" title="Validate my Atom feed" width="88" height="31" border="0" /></a>
+
+</body>
+</html>
+
+EOC
+
+write_file("template.rss", <<EOC);
+<?xml version="1.0"?>
+<!-- name="generator" content="bryar" -->
+<rdf:RDF
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+  xmlns:admin="http://webns.net/mvcb/"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns="http://purl.org/rss/1.0/">
+
+  <channel rdf:about="[%bryar.config.baseurl%]">
+    <title>[% bryar.config.name %]</title>
+    <link>[% bryar.config.baseurl %]</link>
+    <description>[% bryar.config.description %]</description>
+    <dc:language>en-us</dc:language>
+    <dc:date>[%documents.first.timepiece.datetime%]</dc:date>
+    <items>
+      <rdf:Seq>
+      [% FOREACH item=documents %]
+      <rdf:li rdf:resource="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
+      [% END %]
+      </rdf:Seq>
+    </items>
+  </channel>
+
+[% FOREACH item = documents %]
+  <item rdf:about="[%bryar.config.baseurl _ "/id_" _ item.id %]">
+    <title> [% item.title %] </title>
+    <link> [%bryar.config.baseurl%]/id_[%item.id%]</link>
+    <description>
+[% item.content | html %]
+</description>
+    <dc:date> [%item.timepiece.datetime %] </dc:date>
+    <dc:creator> [%item.author %] </dc:creator>
+  </item>
+[% END %]
+</rdf:RDF>
+EOC
+
+write_file("template.rss2", <<EOC);
+<?xml version="1.0" encoding="iso-8859-1"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:admin="http://webns.net/mvcb/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<channel>
+<title>[% bryar.config.name %]</title>
+<link>[% bryar.config.baseurl %]</link>
+<description>[% bryar.config.description %]</description>
+<dc:language>en-us</dc:language>
+<admin:generatorAgent rdf:resource="http://bryar.multiply.org/" />
+    <dc:date>[%documents.first.timepiece.datetime%]-05:00</dc:date>
+    <items>
+      <rdf:Seq>
+      [% FOREACH item=documents %]
+      <rdf:li rdf:resource="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
+      [% END %]
+      </rdf:Seq>
+    </items>
+  </channel>
+</rss>
+EOC
+
+write_file("template.atom", <<EOC);
+<?xml version="1.0" encoding="utf-8"?>
+<feed version="0.3" xmlns="http://purl.org/atom/ns#">
+  <title>[% bryar.config.name %]</title>
+  <link rel="alternate" type="text/html"
+   href="[% bryar.config.baseurl %]"/>
+  <modified>[%documents.first.timepiece.datetime%][% FILTER format("%03d") %][% documents.first.timepiece.tzoffset / 3600 %][%END%]:00</modified>
+  <author>
+    <name>[% bryar.config.author %]</name>
+  </author>
+[% FOREACH item = documents %]
+  <entry>
+    <title>[% item.title %]</title>
+    <link rel="alternate" type="text/html"
+     href="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
+    [% idURL = bryar.config.baseurl | replace('http://', '') | replace('/.*', '') %]
+    <id>tag:[% idURL _ "," _ item.timepiece.year _":id_" _ item.id %]</id>
+    [% hours = item.timepiece.tzoffset / 3600 %]
+    [% minutes = (item.timepiece.tzoffset % (hours * 60 * 60)) / 60 %]
+    <issued>[% item.timepiece.datetime %][% FILTER format("%03d") %][% hours  %][%END%]:[% FILTER format("%02d") %][% minutes %][%END%]</issued>
+    <modified>[% item.timepiece.datetime %][% FILTER format("%03d") %][% hours  %][%END%]:[% FILTER format("%02d") %][% minutes %][%END%]</modified>
+    <summary type="text/plain"> [% FILTER truncate(252) %]
+            [%  item.excerpt(bryar.config.excerpt_words) %]
+        [% END %]
+    </summary>
+    <content type="text/html" mode="escaped" xml:lang="en" xml:base="[% bryar.config.baseurl %]">
+      <![CDATA[ [% item.content %] ]]>
+    </content>
+  </entry>
+[% END %]
+</feed>
+EOC
+
+write_file("calendar", <<EOC);
+<table class="calendar">
+<thead>
+<tr class="days"><td>Sun</td><td>Mon</td><td>Tue</td><td>Wed</td><td>Thu</td><td
+>Fri</td><td>Sat</td></tr>
+</thead>
+<tbody>
+[% FOREACH week = bryar.posts_calendar %]
+  <tr>
+  [% FOREACH day = week %]
+    <td[% IF day.sunday %] class="sunday"[% END %]>
+    [% '<a href="' _ bryar.config.baseurl _ '/' _ day.link _ '">' IF day.link%]
+    [% day.day || '&nbsp;' %][% '</a>' IF day.link %]</td>
+  [% END %]
+  </tr>
+[% END %]
+</tbody>
+</table>
+EOC
+
+chmod 0644, $_ for ("bryar.conf", "1.txt", "head.html", "foot.html",
+                    "template.html","template.rss", "template.atom", "calendar");
+print "\nDone. Now you want to probably customize 'bryar.conf'.\n";
+print "You should probably also customize template.html, head.html and foot.html\n";
+print "Then point your browser at bryar.cgi, and get blogging!\n";
