@@ -138,7 +138,6 @@ sub make_document {
     chomp $title;
     local $/;
     my $content = <$in>;
-    $content =~ s/\n\n/<p>/g;
     close $in;
     my $id = $self->file_to_id($file);
 
