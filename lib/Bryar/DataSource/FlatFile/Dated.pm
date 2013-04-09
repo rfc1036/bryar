@@ -1,7 +1,6 @@
 package Bryar::DataSource::FlatFile::Dated;
 use base 'Bryar::DataSource::FlatFile';
 our $VERSION = '1.0';
-use Cwd;
 use File::Basename;
 use Bryar::Document;
 use File::Find::Rule;

@@ -39,7 +39,7 @@ Returns all documents making up the blog.
 sub all_documents {
     # my ($self, $config) = @_;
     # croak "Must pass in a Bryar::Config object" unless UNIVERSAL::isa($config, "Bryar::Config");
-    # my $where = cwd;
+    # my $where = getcwd;
     # chdir($config->datadir); # Damn you, F::F::R.
     # my @docs = map { $self->make_document($_) }
     #             File::Find::Rule->file()
@@ -101,7 +101,7 @@ A more advanced search for specific documents
 sub search {
     my ($self, $config, %params) = @_;
     croak "Must pass in a Bryar::Config object" unless UNIVERSAL::isa($config, "Bryar::Config");
-    my $was = cwd;
+    my $was = getcwd;
     my $where = $config->datadir."/";
     if ($params{subblog}) { $where .= $params{subblog}; }
     chdir($where); # Damn you, F::F::R.
