@@ -66,10 +66,6 @@ sub _tt_process {
     my $tt = $class->_tt($bryar);
     $tt->process($filename, {
         documents => \@documents,
-        recent    => [$bryar->config()->collector()->collect($bryar->config())],
-        archive   => [
-            $bryar->config()->source()->all_but_recent($bryar->config())
-        ],
         bryar     => $bryar,
     }, \$output);
     if (!$output) {
