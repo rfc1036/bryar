@@ -21,8 +21,10 @@ INSTALLING BRYAR
     The long answer:
 
     The only front-end working in this release is the CGI one; please don't
-    try this in mod_perl yet. You'll need to write a little driver script
-    which sets some parameters. For instance, my bryar.cgi looks like this:
+    try this in mod_perl yet.
+
+    You'll need to write a little driver script which sets some parameters.
+    For instance, my bryar.cgi looks like this:
 
         #!/usr/bin/perl
         use Bryar;
@@ -48,11 +50,13 @@ INSTALLING BRYAR
         name: Themes, Dreams and Crazy Schemes
         description: Simon Cozens' weblog
         baseurl: http://blog.simon-cozens.org/bryar.cgi
+        email: something@example.com
 
     in a bryar.conf, and then would be able to use "Bryar->go()" with no
     further parameters.
 
-    For details of interesting parameters, look in Bryar::Config.
+    For details of interesting parameters, look in Bryar::Config. See also
+    Bryar::DataSource::DBI for how to database-back the blog.
 
     Now you will need some templates to make your new blog look nice and
     shiny. You can copy in the template.rss and template.html which come
@@ -97,6 +101,17 @@ USING BRYAR
 
         http://your.blog.com/bryar.cgi/otherblog/xml
 
+    These are actually blosxom backwardly-compatible versions of the Bryar:
+
+        http://your.blog.com/bryar.cgi?format=xml
+
+    There's also an Atom feed:
+
+        http://your.blog.com/bryar.cgi?format=atom
+
+    And you can write your own formats; see the renderer class documentation
+    for how.
+
     Each blog post will have a unique ID; you can get to an individual post
     by specifying its ID:
 
@@ -127,6 +142,13 @@ METHODS
     Does all the work of producing the blog. For parameters you might be
     interested in setting, see "Bryar::Config".
 
+  posts_calendar
+    TODO: Move this out to something that is more flexible.
+
+    Return a data structure containing the days and weeks of a given month
+    and year with blog posts attached. See the "calendar" template for an
+    example.
+
   config
     Returns the Bryar::Config object for this blog. This is useful as the
     blog object is passed into the templates by default.
@@ -135,6 +157,15 @@ LICENSE
     This module is free software, and may be distributed under the same
     terms as Perl itself.
 
+THANKS
+    Steve Peters provided Atom support. Marco d'Itri contributed the
+    calendar, HTTP validators, caching, FastCGI, sitemaps, non-ASCII
+    charsets, bug fixes and optimizations.
+
 AUTHOR
-    Copyright (C) 2003, Simon Cozens "simon@kasei.com"
+    Copyright (C) 2003, Simon Cozens "simon@cpan.org"
+
+    some parts Copyright 2007 David Cantrell "david@cantrell.org.uk"
+
+    some parts Copyright 2009 Marco d'Itri "md@linux.it"
 
