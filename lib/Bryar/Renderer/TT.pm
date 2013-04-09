@@ -4,7 +4,8 @@ use strict;
 use warnings;
 use Carp;
 use Template;
-our $VERSION = '1.1';
+use Template::Provider::Encoding;
+our $VERSION = '1.2';
 
 =head1 NAME
 
@@ -46,7 +47,12 @@ sub _tt {
     @path = map { $_, $_."/templates" } @path;
     return Template->new({
         INCLUDE_PATH => \@path,
-	ABSOLUTE     => 1,
+        LOAD_TEMPLATES => [
+            Template::Provider::Encoding->new({
+                INCLUDE_PATH => \@path,
+            }),
+        ],
+        ABSOLUTE     => 1,
         EVAL_PERL    => 1,
         RELATIVE     => 1,
         PRE_CHOMP    => 1,
