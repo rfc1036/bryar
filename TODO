@@ -1,3 +1,10 @@
+Check the implementation of ETag conditional requests:
+http://redbot.org/?descend=True&uri=http://blog.bofh.it/
+
+Add proper support for Plack.
+
+Use CHI instead of Cache::Cache.
+
 Is the fastcgi_request method the best interface for Bryar::Frontend::FastCGI?
 Passing the variable to $bryar->go() looks more elegant, but it would
 require restructuring it and Bryar::Config to support merging new
@@ -16,8 +23,6 @@ Update Bryar::_doit to support caching the collector output instead of
 the renderer output, to allow using dynamic templates.
 
 Remove all calls to chdir(2).
-
-Add support for trackbacks.
 
 Add many more tests.
 
