@@ -8,6 +8,7 @@ use Time::Piece;
 use Time::Local;
 use Digest::MD5 qw(md5_hex);
 use Encode;
+use HTTP::Date;
 
 =head1 NAME
 
@@ -153,12 +154,12 @@ Output the entire blog data to the browser
 =cut
 
 sub output {
-    my ($self, $ct, $data, $headers) = @_;
+    my ($self, $ct, $data, $last_modified, $headers) = @_;
     $headers ||= { };
 
     $self->send_header('Content-Type', $ct) if not $headers->{'Content-Type'};
 
-    if (not $headers->{Status} and $self->_etag($data)) {
+    if (not $headers->{Status} and $self->not_modified($last_modified, $data)) {
         $self->send_header($_, $headers->{$_}) foreach keys %$headers;
         $self->send_header('Status', '304 Not Modified');
         $self->send_header('Content-Length', 0);
@@ -170,12 +171,39 @@ sub output {
     }
 }
 
-sub _etag {
+sub not_modified {
+    my ($self, $last_modified, $data) = @_;
+
+	# Each method outputs a header as a side effect, so they cannot be
+	# combined in a single test.
+	my $t1 = $self->check_last_modified($last_modified);
+	my $t2 = $self->check_etag($data);
+	return $t1 and $t2;
+}
+
+sub check_etag {
     my ($self, $data) = @_;
     my $req_tag = $self->get_header("If-None-Match") || '';
     my $etag = '"'.md5_hex(Encode::encode_utf8($data)).'"';
     $self->send_header('ETag', $etag);
     return $etag eq $req_tag;
+}
+
+sub check_last_modified {
+	my ($self, $last_modified) = @_;
+	return 0 if not $last_modified;
+
+	my $last_modified_str = HTTP::Date::time2str($last_modified);
+	$self->send_header('Last-Modified', $last_modified_str);
+
+	my $since = $self->get_header('If-Modified-Since') || return 0;
+	$since =~ s/;.+$//; # remove any parameters
+
+	return 1 if $since eq $last_modified_str; # optimization
+	my $since_epoch = HTTP::Date::str2time($since) || return 0;
+	return 1 if $since_epoch >= $last_modified;
+
+	return 0; # modified
 }
 
 =head2 report_error

@@ -5,6 +5,7 @@ use Time::Local;
 use Bryar::Comment;
 use Calendar::Simple;
 use DateTime;
+use List::Util;
 
 use 5.006;
 use strict;
@@ -225,7 +226,12 @@ sub _doit {
     if (not @output) {
         my @documents = $self->config->collector->collect($self->config, %args);
 
-        $self->{http_headers}->{Status} = '404 Not Found' if not @documents;
+        my $last_modified = 0;
+        if (@documents) {
+            $last_modified = List::Util::max(map { $_->{epoch} } @documents);
+        } else {
+            $self->{http_headers}->{Status} = '404 Not Found';
+        }
 
         $args{format} ||= 'html';
 
@@ -235,6 +241,7 @@ sub _doit {
                 $self,
                 @documents
             ),
+            $last_modified,
             $self->{http_headers}
         );
 
