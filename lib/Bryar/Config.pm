@@ -82,7 +82,7 @@ sub load {
         if (-r "$datadir/$file") { $file = "$datadir/$file"; }
         else                     { return () }
     }
-    open(my $config, '<:utf8', $file) or return ();
+    open(my $config, '<:encoding(UTF-8)', $file) or return ();
     while (<$config>) {
         chomp;
         next if /^#/ or /^$/;

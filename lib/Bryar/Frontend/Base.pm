@@ -184,7 +184,7 @@ sub not_modified {
 sub check_etag {
     my ($self, $data) = @_;
     my $req_tag = $self->get_header("If-None-Match") || '';
-    my $etag = '"'.md5_hex(Encode::encode_utf8($data)).'"';
+    my $etag = '"'.md5_hex(encode('UTF-8', $data)).'"';
     $self->send_header('ETag', $etag);
     return $etag eq $req_tag;
 }
