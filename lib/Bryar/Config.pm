@@ -85,6 +85,7 @@ sub load {
     open(my $config, '<:utf8', $file) or return ();
     while (<$config>) {
         chomp;
+        next if /^#/ or /^$/;
         my ($k, $v) = split /\s*:\s*/, $_, 2;
         $args{$k} = $v;
     }
