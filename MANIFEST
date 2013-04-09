@@ -11,6 +11,7 @@ lib/Bryar/Frontend/Base.pm
 lib/Bryar/Frontend/CGI.pm
 lib/Bryar/Frontend/FastCGI.pm
 lib/Bryar/Frontend/Mod_perl.pm
+lib/Bryar/Frontend/Plack.pm
 lib/Bryar/Frontend/Static.pm
 lib/Bryar/Renderer/SiteMap.pm
 lib/Bryar/Renderer/TT.pm
@@ -24,6 +25,7 @@ examples/blog2news/encode2047.pm
 examples/blog2news/html2text.pm
 examples/blog2news/template.nntp
 examples/bryar.fcgi
+examples/bryar.psgi
 examples/editor/editor-submit
 examples/editor/post.html
 examples/makesitemap
