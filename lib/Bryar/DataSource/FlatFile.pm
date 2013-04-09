@@ -9,6 +9,8 @@ use warnings;
 use Carp;
 our $VERSION = '1.2';
 
+my %UID_Cache;
+
 =head1 NAME
 
 Bryar::DataSource::FlatFile - Blog entries from flat files, a la blosxom
@@ -133,7 +135,13 @@ sub make_document {
     open(my($in), '<:utf8', $file) or return;
     my $when = (stat $in)[9];
     local $/ = "\n";
-    my $who = getpwuid((stat _)[4]);
+    my $fileuid = (stat _)[4];
+    my $who;
+        if (exists $UID_Cache{$fileuid}) {
+        $who = $UID_Cache{$fileuid};
+    } else {
+        $who = $UID_Cache{$fileuid} = getpwuid($fileuid);
+    }
     my $title = <$in>;
     chomp $title;
     local $/;
