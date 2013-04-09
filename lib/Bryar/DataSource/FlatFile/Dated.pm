@@ -41,7 +41,7 @@ sub make_document {
     return unless $file;
     open(my($in), '<:utf8', $file) or return;
     local $/ = "\n";
-    my $who = getpwuid((stat $file)[4]);
+    my $who = getpwuid((stat $in)[4]);
     $file =~ s/\.txt$//;
     my $when  = <$in>;
     my $title = <$in>;

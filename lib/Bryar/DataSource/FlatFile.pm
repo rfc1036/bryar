@@ -131,9 +131,9 @@ sub make_document {
     my ($self, $file) = @_;
     return unless $file;
     open(my($in), '<:utf8', $file) or return;
-    my $when = (stat $file)[9];
+    my $when = (stat $in)[9];
     local $/ = "\n";
-    my $who = getpwuid((stat $file)[4]);
+    my $who = getpwuid((stat _)[4]);
     my $title = <$in>;
     chomp $title;
     local $/;
