@@ -39,7 +39,7 @@ See L<Bryar::DataSource::FlatFile>
 sub make_document {
     my ($self, $file) = @_;
     return unless $file;
-    open(my($in), $file) or return;
+    open(my($in), '<:utf8', $file) or return;
     local $/ = "\n";
     my $who = getpwuid((stat $file)[4]);
     $file =~ s/\.txt$//;
@@ -70,7 +70,7 @@ sub make_document {
 
 sub _read_comments {
     my ($id, $file) = @_;
-    open COMMENTS, $file or die $!;
+    open(COMMENTS, '<:utf8', $file) or die $!;
     local $/;
     # Watch carefully
     my $stuff = <COMMENTS>;

@@ -76,12 +76,13 @@ sub load {
         if (-r "$datadir/$file") { $file = "$datadir/$file"; }
         else                     { return () }
     }
-    open my $config, $file or return ();
+    open(my $config, '<:utf8', $file) or return ();
     while (<$config>) {
         chomp;
         my ($k, $v) = split /\s*:\s*/, $_, 2;
         $args{$k} = $v;
     }
+    close $config;
     return %args;
 }
 

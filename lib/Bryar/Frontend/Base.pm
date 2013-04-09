@@ -7,6 +7,7 @@ our $VERSION = '1.2';
 use Time::Piece;
 use Time::Local;
 use Digest::MD5 qw(md5_hex);
+use Encode;
 
 =head1 NAME
 
@@ -160,7 +161,7 @@ sub output {
         $self->send_data('');
     } else {
         $self->send_header($_, $headers->{$_}) foreach keys %$headers;
-        $self->send_header('Content-Length', length($data));
+        $self->send_header('Content-Length', bytes::length($data));
         $self->send_data($data);
     }
 }
@@ -168,7 +169,7 @@ sub output {
 sub _etag {
     my ($self, $data) = @_;
     my $req_tag = $self->get_header("If-None-Match") || '';
-    my $etag = '"'.md5_hex($data).'"';
+    my $etag = '"'.md5_hex(Encode::encode_utf8($data)).'"';
     $self->send_header('ETag', $etag);
     return $etag eq $req_tag;
 }

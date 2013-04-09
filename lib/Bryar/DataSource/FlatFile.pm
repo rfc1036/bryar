@@ -130,7 +130,7 @@ blosxom-style.
 sub make_document {
     my ($self, $file) = @_;
     return unless $file;
-    open(my($in), $file) or return;
+    open(my($in), '<:utf8', $file) or return;
     my $when = (stat $file)[9];
     local $/ = "\n";
     my $who = getpwuid((stat $file)[4]);
@@ -162,7 +162,7 @@ sub make_document {
 
 sub _read_comments {
     my ($id, $file) = @_;
-    open COMMENTS, $file or die $!;
+    open(COMMENTS, '<:utf8', $file) or die $!;
     local $/;
     # Watch carefully
     my $stuff = <COMMENTS>;
@@ -219,7 +219,7 @@ sub add_comment {
             if($params{url} && $params{url} !~ /^http:\/\//);
         # This probably fails with subblogs, but I don't use them.
         chdir $config->datadir."/";
-        open OUT, ">> $file" or die $!;
+        open(OUT, ">>:utf8", $file) or die $!;
         delete $params{document};
         print OUT "$_: $params{$_}\n" for keys %params;
         print OUT "-----\n";
