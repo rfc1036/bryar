@@ -202,7 +202,12 @@ sub add_comment {
     } elsif(length($params{content}) < 1) { # real content always has, errm, content
         die("Attempt to post with no content\n");
     } elsif(@links) {
-        open(MAIL, '| mail -s "'.$params{email}.' '.$params{author}.' maybe tried to spam the journal" '.$config->email()) || die("Can't send mail\n$!\n");
+        my($email, $author) = map { # kill funny chars to avoid remote
+            my $foo = $_;           # execution in open(). Yuck.
+            $foo =~ s/[^\w @]/_/g;
+            $foo;
+        } @params{qw(email author)};
+        open(MAIL, "| mail -s \"$email $author maybe tried to spam the journal\" ".$config->email()) || die("Can't send mail\n$!\n");
         print MAIL "$_: $params{$_}\n" for keys %params;
         print MAIL "\nEnvironment\n";
         print MAIL "$_: $ENV{$_}\n" for keys %ENV;

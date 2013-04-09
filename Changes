@@ -1,5 +1,8 @@
 Revision history for Perl extension Bryar.
 
+3.1 - 2009-05-28
+    - remote execution bug fixed
+
 3.0 - 2007-01-20
     - First release by new maintainer David Cantrell
     - Comments now accept an 'email' field from the user
