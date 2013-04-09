@@ -35,7 +35,7 @@ My first Bryar blog post!
 hints on what else you can do with Bryar.</p>
 EOC
 
-write_file("template.html", <<'EOC');
+write_file("blogmacros.tt2", <<'EOC');
 
 [% MACRO day(entry_time) BLOCK;
     entry_time.day _ ", " _ entry_time.mday _ " " _
@@ -124,7 +124,10 @@ MACRO keywords(entry) BLOCK;
     END;
 END;
 %]
+EOC
 
+write_file("template.html", <<'EOC');
+[% PROCESS blogmacros.tt2 %]
 [% INCLUDE head.html %]
 
 [% FOREACH entry = documents;
@@ -302,7 +305,7 @@ write_file("template.atom", <<EOC);
 </feed>
 EOC
 
-write_file("calendar", <<EOC);
+write_file("calendar.tt2", <<EOC);
 <table class="calendar">
 <thead>
 <tr class="days">
@@ -330,7 +333,8 @@ write_file("calendar", <<EOC);
 EOC
 
 chmod 0644, $_ for ("bryar.conf", "1.txt", "head.html", "foot.html",
-                    "template.html","template.rss", "template.atom", "calendar");
+                    "template.html","template.rss", "template.atom",
+                    "calendar.tt2", "blogmacros.tt2");
 print "\nDone. Now you want to probably customize 'bryar.conf'.\n";
 print "You should probably also customize template.html, head.html and foot.html\n";
 print "Then point your browser at bryar.cgi, and get blogging!\n";
