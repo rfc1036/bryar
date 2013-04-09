@@ -11,7 +11,7 @@ use 5.006;
 use strict;
 use warnings;
 use Carp;
-our $VERSION = '3.1';
+our $VERSION = '4.0';
 
 =head1 NAME
 
@@ -326,8 +326,9 @@ terms as Perl itself.
 
 =head1 THANKS
 
-Steve Peters provided Atom support. Marco d'Itri added ETag and
-Cache-Control support, as well as the calendar.
+Steve Peters provided Atom support.
+Marco d'Itri contributed the calendar, HTTP validators, caching, FastCGI,
+sitemaps, non-ASCII charsets, bug fixes and optimizations.
 
 =head1 AUTHOR
 
@@ -335,6 +336,7 @@ Copyright (C) 2003, Simon Cozens C<simon@cpan.org>
 
 some parts Copyright 2007 David Cantrell C<david@cantrell.org.uk>
 
+some parts Copyright 2009 Marco d'Itri C<md@linux.it>
 
 =cut
 
