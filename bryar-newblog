@@ -118,10 +118,6 @@ MACRO comments(entry) BLOCK;
  END;
 END; 
 
-%]
-
-[%
-
 MACRO google_link(query, label) BLOCK;
  '<a href="http://www.google.com/search?q=';
  query | html | uri;
@@ -157,19 +153,19 @@ write_file("template.html", <<'EOC');
 
     <div class="bryarEntry">
         <a name="[%entry.id%]"></a>
-            <h2 class="bryarTitle">[%entry.title%]</h2>
+            <h2 class="bryarTitle">[% entry.title | html %]</h2>
 
             [% entry.content %]
 
             <br />
 
     <div class="bryarEntrySource">Posted at 
-        <span class="bryarEntryTime">[%entry_time.time%]</span> 
-        by <span class="bryarEntryAuthor">[% bryar.config.author %]</span>
+        <span class="bryarEntryTime">[% entry_time.time %]</span>
+        by <span class="bryarEntryAuthor">[% bryar.config.author | html %]</span>
     </div> 
     
     <ul class="bryarEntryLinks">     
-        <li><a href="[% permalink(entry, "") %]" title="Permanent link to '[% entry.title %]'">#</a></li>
+        <li><a href="[% permalink(entry, "") %]" title="Permanent link to '[% entry.title | html %]'">#</a></li>
         <li><a href="http://www.technorati.com/cosmos/search.html?rank=&url=[% permalink(entry, "") %]"><img src="/notebook/images/technorati_bubble.gif" width="19px" height="18px" border="0" align="middle" title="Search Technorati Cosmos..." /></a></li>
         <li>[% google_link(entry.title, "G") %]</li>
         <li>[% comments(entry) %]</li>
@@ -186,17 +182,24 @@ write_file("template.html", <<'EOC');
 EOC
 
 write_file("head.html", <<EOC);
+<!DOCTYPE HTML>
 <html>
-
 <head>
-    <title>[% bryar.config.name %]</title>
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="[% bryar.config.url %]?format=rss" />
-    <link rel="alternate" type="application/atom+xml" title="ATOM" href="[% bryar.config.url %]?format=atom" />
+[% IF http_error == '404' %]
+<title>Error 404: The requested page does not exist!</title>
+[% ELSIF bryar.arguments.id %]
+<title>[% documents.first.title | html %]</title>
+[% ELSE %]
+<title>[% bryar.config.name | html %]</title>
+[% END %]
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="[% bryar.config.url %]?format=rss" />
+<link rel="alternate" type="application/atom+xml" title="ATOM" href="[% bryar.config.url %]?format=atom" />
 </head>
 
 <body>
 <div id="bryarHeader">
-    <h1>[% bryar.config.name %]</h1>
+    <h1>[% bryar.config.name | html %]</h1>
 </div>
 
 EOC
@@ -204,9 +207,9 @@ EOC
 write_file("foot.html", <<EOC);
 <hr /> 
 
-<em>Powered by Bryar!</em> 
+<em>Powered by <a href="http://search.cpan.org/dist/Bryar/">Bryar!</a></em>
 
-<form>Search &quot;[% bryar.config.name %]&quot;: <br />
+<form>Search &quot;[% bryar.config.name | html %]&quot;: <br />
    <input name="search" type="text" class="bryarSingleLineBox">
    <input name="submit" type="submit" value="Search" class="bryarButton" />
 </form>
@@ -245,10 +248,10 @@ write_file("template.rss", <<EOC);
   xmlns="http://purl.org/rss/1.0/">
 
   <channel rdf:about="[% bryar.config.baseurl %]/?format=xml">
-    <title>[% bryar.config.name %]</title>
+    <title>[% bryar.config.name | html %]</title>
     <link>[% bryar.config.baseurl %]/</link>
-    <description>[% bryar.config.description %]</description>
-    <dc:creator>[% bryar.config.author || item.author %]</dc:creator>
+    <description>[% bryar.config.description | html %]</description>
+    <dc:creator>[% bryar.config.author || item.author | html %]</dc:creator>
     <dc:language>en-us</dc:language>
     <dc:date>[% datetimetz(documents.first.datetime) %]</dc:date>
 [% IF 0 %]
@@ -267,11 +270,11 @@ write_file("template.rss", <<EOC);
 
 [% FOREACH item = documents %]
   <item rdf:about="[% permalink(item) %]">
-    <title>[% item.title %]</title>
+    <title>[% item.title | html %]</title>
     <link>[% permalink(item) %]</link>
     <description>[% item.content | html %]</description>
     <dc:date>[% datetimetz(item.datetime) %]</dc:date>
-    <dc:creator>[% bryar.config.author || item.author %]</dc:creator>
+    <dc:creator>[% bryar.config.author || item.author | html %]</dc:creator>
   </item>
 [% END %]
 </rdf:RDF>
@@ -281,9 +284,9 @@ write_file("template.rss2", <<EOC);
 <?xml version="1.0" encoding="iso-8859-1"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:admin="http://webns.net/mvcb/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:content="http://purl.org/rss/1.0/modules/content/">
 <channel>
-<title>[% bryar.config.name %]</title>
+<title>[% bryar.config.name | html %]</title>
 <link>[% bryar.config.baseurl %]</link>
-<description>[% bryar.config.description %]</description>
+<description>[% bryar.config.description | html %]</description>
 <dc:language>en-us</dc:language>
 <admin:generatorAgent rdf:resource="http://bryar.multiply.org/" />
     <dc:date>[%documents.first.timepiece.datetime%]-05:00</dc:date>
@@ -301,17 +304,18 @@ EOC
 write_file("template.atom", <<EOC);
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>[% bryar.config.name %]</title>
-  <subtitle>[% bryar.config.description %]</subtitle>
+  <title>[% bryar.config.name | html %]</title>
+  <subtitle>[% bryar.config.description | html %]</subtitle>
+  <id>[% bryar.config.baseurl %]/?format=atom</id>
   <link rel="alternate" type="text/html"
    href="[% bryar.config.baseurl %]/"/>
   <link rel="alternate" type="application/rdf+xml" title="RSS"
    href="[% bryar.config.baseurl %]/?format=xml"/>
-  <link rel="alternate" type="application/atom+xml" title="ATOM"
+  <link rel="self" type="application/atom+xml" title="ATOM"
    href="[% bryar.config.baseurl %]/?format=atom"/>
   <updated>[% datetimetz(documents.first.datetime) %]</updated>
   <author>
-    <name>[% bryar.config.author %]</name>
+    <name>[% bryar.config.author | html %]</name>
     <uri>[% bryar.config.baseurl %]/</uri>
   </author>
 
@@ -319,19 +323,21 @@ write_file("template.atom", <<EOC);
 
 [% FOREACH item = documents %]
   <entry>
-    <title>[% item.title %]</title>
+    <title>[% item.title | html %]</title>
     <link rel="alternate" type="text/html"
      href="[% permalink(item) %]"/>
     [% idURL = bryar.config.baseurl | replace('http://', '') | replace('/.*', '') %]
     <id>tag:[% idURL _ "," _ item.timepiece.year _ ":id_" _ item.id %]</id>
     <published>[% datetimetz(item.datetime) %]</published>
     <updated>[% datetimetz(item.datetime) %]</updated>
-    <summary type="text/plain"> [% FILTER truncate(252) %]
+[#%
+    <summary type="text">[% FILTER truncate(252) %]
             [%  item.excerpt(bryar.config.excerpt_words) %]
         [% END %]
     </summary>
-    <content type="text/html" xml:lang="en" xml:base="[% bryar.config.baseurl %]/">
-      <![CDATA[ [% item.content %] ]]>
+%]
+    <content type="html" xml:lang="en" xml:base="[% bryar.config.baseurl %]/">
+      <![CDATA[[% item.content %]]]>
     </content>
   </entry>
 [% END %]
