@@ -246,8 +246,6 @@ sub posts_calendar {
 
 	# make an hash with keys the days with a post
 	my %posts = map { DateTime->from_epoch( epoch => $_->{epoch},  time_zone => $self->config->{time_zone} )->day() => $_->{id} } @documents;
-use Data::Dumper;
-print STDERR Dumper(\%posts);
 
 	my @m = calendar($month, $year);
 	my @month;
