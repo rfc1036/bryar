@@ -55,7 +55,13 @@ sub new {
 
     %args = (%args, $self->load($args{config} || "bryar.conf"));
     @{$self}{keys %args} = values %args;
-    $self->{$_}->require or die $@ for qw(renderer source collector frontend);
+
+    foreach my $module (qw(renderer source collector frontend)) {
+        $self->$module->require or die $@;
+        $self->$module($self->$module->new(config => $self))
+            if $self->$module->can('new') or ref $self->$module;
+    }
+
     return $self;
 }
 

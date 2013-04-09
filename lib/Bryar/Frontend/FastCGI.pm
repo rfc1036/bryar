@@ -11,8 +11,7 @@ Bryar::Frontend::FastCGI - FastCGI interface to Bryar
 
 =head1 SYNOPSIS
 
-    my $bryar = Bryar->new();
-    $bryar->config->frontend(new Bryar::Frontend::FastCGI);
+    my $bryar = Bryar->new(frontend => 'Bryar::Frontend::FastCGI');
     while (my $q = new CGI::Fast) {
         $bryar->config->frontend->fastcgi_request($q);
         eval { $bryar->go };
