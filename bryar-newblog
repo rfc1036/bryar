@@ -85,8 +85,10 @@ END;
 
 MACRO permalink(entry, params) BLOCK;
  bryar.config.baseurl;
- '/id_';
- entry.id;
+ IF bryar.arguments.subblog;
+     '/' _ bryar.arguments.subblog;
+ END;
+ entry.url;
  "?" _ params IF params;
 END;
 
@@ -250,16 +252,16 @@ write_file("template.rss", <<EOC);
     <items>
       <rdf:Seq>
       [% FOREACH item=documents %]
-      <rdf:li rdf:resource="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
+      <rdf:li rdf:resource="[% permalink(item) %]"/>
       [% END %]
       </rdf:Seq>
     </items>
   </channel>
 
 [% FOREACH item = documents %]
-  <item rdf:about="[%bryar.config.baseurl _ "/id_" _ item.id %]">
-    <title> [% item.title %] </title>
-    <link> [%bryar.config.baseurl%]/id_[%item.id%]</link>
+  <item rdf:about="[% permalink(item) %]">
+    <title>[% item.title %]</title>
+    <link>[% permalink(item) %]</link>
     <description>[% item.content | html %]</description>
     <dc:date>[% datetimetz(item.datetime) %]</dc:date>
     <dc:creator>[% bryar.config.author || item.author %]</dc:creator>
@@ -281,7 +283,7 @@ write_file("template.rss2", <<EOC);
     <items>
       <rdf:Seq>
       [% FOREACH item=documents %]
-      <rdf:li rdf:resource="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
+      <rdf:li rdf:resource="[% permalink(item) %]"/>
       [% END %]
       </rdf:Seq>
     </items>
@@ -312,9 +314,9 @@ write_file("template.atom", <<EOC);
   <entry>
     <title>[% item.title %]</title>
     <link rel="alternate" type="text/html"
-     href="[%bryar.config.baseurl _ "/id_" _ item.id %]"/>
+     href="[% permalink(item) %]"/>
     [% idURL = bryar.config.baseurl | replace('http://', '') | replace('/.*', '') %]
-    <id>tag:[% idURL _ "," _ item.timepiece.year _":id_" _ item.id %]</id>
+    <id>tag:[% idURL _ "," _ item.timepiece.year _ ":id_" _ item.id %]</id>
     <published>[% datetimetz(item.datetime) %]</published>
     <updated>[% datetimetz(item.datetime) %]</updated>
     <summary type="text/plain"> [% FILTER truncate(252) %]

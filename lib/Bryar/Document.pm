@@ -184,6 +184,24 @@ sub id {
     return $self->{id};
 }
 
+=head2 url
+
+    $self->url;
+
+Returns the post url relative to $bryar->config->baseurl.
+
+=cut
+
+sub url {
+    my $self = shift;
+
+    my $id = $self->{id};
+    $id =~ s#^.*/##;
+    my $url = '';
+    $url = '/' . $self->{category} if $self->{category} ne 'main';
+    return $url . '/id_' . $id;
+}
+
 =head2 comments
 
     @comments = $self->comments();
