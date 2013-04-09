@@ -174,15 +174,36 @@ sub _etag {
     $self->report_error($title, $message)
 
 Used when something went horribly wrong inside Bryar. Spits out the
-error in as friendly a way as possible to the browser.
+error in as friendly a way as possible to the browser, HTML-escaped
+and enclosed by a <p> tag, and to STDERR.
 
 =cut
 
-sub report_error {
+sub report_error_browser {
     my ($class, $title, $message) = @_;
     $class->send_header("Content-type", "text/html");
-    $class->send_data("<H1>$title</H1> $message");
-    exit;
+    $class->send_header('Status', '500');
+    $class->send_data(
+        "<!DOCTYPE HTML>\n" .
+        "<html><head><title>$title</title></head>\n" .
+        "<body><h1>$title</h1>$message</body></html>"
+    );
+}
+
+sub report_error_html {
+    my ($class, $title, $message) = @_;
+    $class->report_error_browser($title, $message);
+    croak "$title: $message";
+}
+
+sub report_error {
+    my ($class, $title, $message) = @_;
+    my ($texttitle, $textmessage) = ($title, $message);
+    $title   =~ s/&/&amp;/g; $title   =~ s/</&lt;/g; $title   =~ s/>/&gt;/g;
+    $message =~ s/&/&amp;/g; $message =~ s/</&lt;/g; $message =~ s/>/&gt;/g;
+    $message = "<p>$message</p>";
+    $class->report_error_browser($title, $message);
+    croak "$texttitle: $textmessage";
 }
 
 sub init {
