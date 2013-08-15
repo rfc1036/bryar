@@ -37,6 +37,8 @@ EOC
 
 write_file("blogmacros.tt2", <<'EOC');
 
+[%
+
 # Accepts a DateTime object and returns a date string suitable for ATOM feeds
 # (i.e. in the format specified by ISO 8601).
 MACRO datetimetz(time) BLOCK;
@@ -50,7 +52,9 @@ END;
 # headers (i.e. in the format specified by RFC 822).
 MACRO datetime822(time) GET time.strftime('%a, %d %b %Y %H:%M:%S %z');
 
-[% MACRO day(entry_time) BLOCK;
+
+
+MACRO day(entry_time) BLOCK;
     entry_time.day _ ", " _ entry_time.mday _ " " _
     entry_time.month _ " " _ entry_time.year;
 END;
